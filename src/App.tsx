@@ -6,14 +6,16 @@ import './App.css';
 function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
-  const [robotIp, setRobotIp] = useState('192.168.43.243');
+  const [robotIp, setRobotIp] = useState('localhost');
   const leftJoystickRef = useRef<HTMLDivElement>(null);
   const rightJoystickRef = useRef<HTMLDivElement>(null);
   const [speedJoystick, setSpeedJoystick] = useState<JoystickManager | null>(null);
   const [directionJoystick, setDirectionJoystick] = useState<JoystickManager | null>(null);
 
   useEffect(() => {
-    const newSocket = io(`http://${robotIp}:3000`);
+    const newSocket = io(`http://localhost:3000`, {
+      transports: ['websocket', 'polling']
+    });
 
     newSocket.on('connect', () => {
       console.log('Connected to robot!');
@@ -33,8 +35,12 @@ function App() {
   }, [robotIp]);
 
   useEffect(() => {
-    if (!leftJoystickRef.current || !rightJoystickRef.current) return;
+    if (!leftJoystickRef.current || !rightJoystickRef.current) {
+      console.log('Joystick refs not ready');
+      return;
+    }
 
+    console.log('Creating joysticks...');
     // Create forward/backward joystick with mobile-optimized settings
     const speed = nipplejs.create({
       zone: leftJoystickRef.current,
@@ -60,18 +66,22 @@ function App() {
       restOpacity: 0.7,
     });
 
+    console.log('Joysticks created successfully');
     setSpeedJoystick(speed);
     setDirectionJoystick(direction);
 
     speed.on('move', (evt, data) => {
+      console.log('Speed joystick moved:', data);
       if (socket && data.direction) {
         const speed = Math.min(Math.abs(data.distance) / 2, 100);
         const command = data.direction.y === 'up' ? 'forward' : 'backward';
+        console.log('Sending speed command:', { command, speed });
         socket.emit('robot-command', { command, speed });
       }
     });
 
     direction.on('move', (evt, data) => {
+      console.log('Direction joystick moved:', data);
       if (socket && data.direction) {
         const angle = data.angle.degree;
         let command = 'stop';
@@ -83,6 +93,7 @@ function App() {
         else command = 'right';
 
         const intensity = Math.min(data.distance / 50, 1);
+        console.log('Sending direction command:', { command, angle, intensity });
         socket.emit('robot-command', { command, angle, intensity });
       }
     });
@@ -108,6 +119,21 @@ function App() {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Add connection status logging
+    if (socket) {
+      socket.on('connect', () => {
+        console.log('Socket connected successfully');
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+      });
+
+      socket.on('command-received', (response) => {
+        console.log('Command received by server:', response);
+      });
+    }
 
     return () => {
       speed.destroy();
