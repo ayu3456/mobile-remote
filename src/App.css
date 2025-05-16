@@ -3,27 +3,34 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  min-height: 100dvh; /* For mobile browsers */
   background-color: #f0f0f0;
   touch-action: none;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .control-panel {
   background-color: #ffffff;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 800px;
-  margin: 1rem;
+  margin: 0 auto;
+  position: relative;
 }
 
 .connection-status {
   text-align: center;
   font-weight: bold;
   margin-bottom: 1rem;
-  padding: 0.5rem;
+  padding: 0.8rem;
   border-radius: 10px;
   background-color: rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
 }
 
 .ip-input {
@@ -32,11 +39,17 @@
 
 .ip-input input {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  padding: 0.8rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
   font-size: 1rem;
   text-align: center;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.ip-input input:focus {
+  border-color: #007bff;
 }
 
 .joysticks-container {
@@ -44,6 +57,7 @@
   justify-content: space-around;
   gap: 2rem;
   margin-top: 2rem;
+  flex-wrap: wrap;
 }
 
 .joystick {
@@ -55,6 +69,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.joystick::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #007bff;
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .joystick-label {
@@ -64,6 +92,7 @@
   text-align: center;
   font-size: 0.9rem;
   color: #666;
+  white-space: nowrap;
 }
 
 .speed-display {
@@ -111,18 +140,110 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 600px) {
-  .joysticks-container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .joystick {
-    width: 150px;
-    height: 150px;
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+  .app {
+    padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right)) max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
   }
 
   .control-panel {
     padding: 1rem;
+    border-radius: 15px;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
+
+  .joysticks-container {
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 2rem;
+    margin: 1rem 0;
+  }
+
+  .joystick {
+    width: min(150px, 40vw);
+    height: min(150px, 40vw);
+    margin: 0 auto;
+  }
+
+  .connection-status {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .ip-input {
+    margin-bottom: 1rem;
+  }
+
+  .ip-input input {
+    padding: 0.8rem;
+    font-size: 16px; /* Prevent zoom on iOS */
+    border-radius: 8px;
+    -webkit-appearance: none; /* Remove default iOS styling */
+    appearance: none;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .control-panel {
+    padding: 0.8rem;
+    border-radius: 12px;
+  }
+
+  .joystick {
+    width: min(120px, 35vw);
+    height: min(120px, 35vw);
+  }
+
+  .joystick-label {
+    bottom: -25px;
+    font-size: 0.8rem;
+  }
+
+  .ip-input input {
+    padding: 0.6rem;
+  }
+}
+
+/* Handle device orientation */
+@media (orientation: landscape) and (max-height: 600px) {
+  .joysticks-container {
+    flex-direction: row;
+    gap: 2rem;
+  }
+
+  .control-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .joystick {
+    width: min(100px, 25vw);
+    height: min(100px, 25vw);
+  }
+}
+
+/* Prevent pull-to-refresh on mobile */
+html, body {
+  overscroll-behavior-y: contain;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 } 
