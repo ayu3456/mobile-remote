@@ -14,22 +14,36 @@ function App() {
 
   useEffect(() => {
     const newSocket = io(`http://localhost:3000`, {
-      transports: ['websocket', 'polling']
+      transports: ['polling']
     });
 
-    newSocket.on('connect', () => {
+    const onConnect = () => {
       console.log('Connected to robot!');
       setConnected(true);
-    });
-
-    newSocket.on('disconnect', () => {
+    };
+    const onDisconnect = () => {
       console.log('Disconnected from robot');
       setConnected(false);
-    });
+    };
+    const onConnectError = (error: any) => {
+      console.error('Socket connection error:', error);
+    };
+    const onCommandReceived = (response: any) => {
+      console.log('Command received by server:', response);
+    };
+
+    newSocket.on('connect', onConnect);
+    newSocket.on('disconnect', onDisconnect);
+    newSocket.on('connect_error', onConnectError);
+    newSocket.on('command-received', onCommandReceived);
 
     setSocket(newSocket);
 
     return () => {
+      newSocket.off('connect', onConnect);
+      newSocket.off('disconnect', onDisconnect);
+      newSocket.off('connect_error', onConnectError);
+      newSocket.off('command-received', onCommandReceived);
       newSocket.disconnect();
     };
   }, [robotIp]);
@@ -119,21 +133,6 @@ function App() {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Add connection status logging
-    if (socket) {
-      socket.on('connect', () => {
-        console.log('Socket connected successfully');
-      });
-
-      socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-      });
-
-      socket.on('command-received', (response) => {
-        console.log('Command received by server:', response);
-      });
-    }
 
     return () => {
       speed.destroy();
